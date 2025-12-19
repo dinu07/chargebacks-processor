@@ -14,7 +14,7 @@ ETL processor to extract chargeback records from a MySQL database table based on
 
 ## Prerequisites
 
-- Java 17 or higher
+- Java 21 or higher
 - Maven 3.6+
 - MySQL 8.0+
 - Docker (optional, for containerization)
