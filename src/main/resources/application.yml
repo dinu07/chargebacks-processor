@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: chargebacks-processor
+  datasource:
+    url: jdbc:mysql://localhost:3306/chargebacks_db?useSSL=false&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+
+chargeback:
+  output:
+    directory: ${OUTPUT_DIR:./output}
+
+logging:
+  level:
+    org.springframework.batch: INFO
+    com.chargebacks.processor: DEBUG
+

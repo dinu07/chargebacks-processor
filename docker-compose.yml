@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mysql-service:
+    image: mysql:8.0
+    container_name: chargebacks-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: chargebacks_db
+      MYSQL_USER: chargeback_user
+      MYSQL_PASSWORD: chargeback_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chargebacks-network
+
+  chargebacks-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chargebacks-processor
+    depends_on:
+      mysql-service:
+        condition: service_healthy
+    environment:
+      DB_USERNAME: root
+      DB_PASSWORD: rootpassword
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-service:3306/chargebacks_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      OUTPUT_DIR: /app/output
+    volumes:
+      - ./output:/app/output
+    networks:
+      - chargebacks-network
+    # Override the default entrypoint to allow command-line arguments
+    entrypoint: ["java", "-jar", "app.jar"]
+
+networks:
+  chargebacks-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+

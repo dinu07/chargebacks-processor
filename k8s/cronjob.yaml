@@ -1,0 +1,72 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: chargeback-processor
+  namespace: default
+spec:
+  # Run daily at 2 AM UTC
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: chargeback-processor
+            image: chargebacks-processor:1.0.0
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: chargeback-db-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chargeback-db-secret
+                  key: password
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-service:3306/chargebacks_db?useSSL=false&serverTimezone=UTC"
+            - name: OUTPUT_DIR
+              value: "/app/output"
+            command:
+            - java
+            - -jar
+            - app.jar
+            - --startTimestamp
+            - "$(date -u -d '1 day ago' +%Y-%m-%dT00:00:00)"
+            - --endTimestamp
+            - "$(date -u -d '1 day ago' +%Y-%m-%dT23:59:59)"
+            volumeMounts:
+            - name: output-volume
+              mountPath: /app/output
+          volumes:
+          - name: output-volume
+            persistentVolumeClaim:
+              claimName: chargeback-output-pvc
+          restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: chargeback-output-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: chargeback-db-secret
+  namespace: default
+type: Opaque
+stringData:
+  username: root
+  password: your-secure-password
+
