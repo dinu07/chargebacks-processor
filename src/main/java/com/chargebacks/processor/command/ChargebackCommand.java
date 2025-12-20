@@ -1,10 +1,13 @@
 package com.chargebacks.processor.command;
 
 import com.chargebacks.processor.job.ChargebackJobLauncher;
+import org.springframework.batch.item.util.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -63,7 +66,14 @@ public class ChargebackCommand implements Callable<Integer> {
             
             System.out.println("Job completed successfully!");
             System.out.println("Output file: " + outputFile);
-            
+
+            try {
+                // see file contents
+                Files.readAllLines(Paths.get(outputFile)).forEach(System.out::println);
+            } catch(Exception e) {
+                // temp fix
+                e.printStackTrace();
+            }
             return 0;
         } catch (Exception e) {
             System.err.println("Error executing job: " + e.getMessage());

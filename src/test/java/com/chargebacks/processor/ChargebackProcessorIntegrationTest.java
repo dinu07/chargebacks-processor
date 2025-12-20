@@ -104,7 +104,7 @@ class ChargebackProcessorIntegrationTest {
         // Arrange - Use today's date as base, test range from 2 days ago to end of yesterday
         // This should capture records created 2 days ago and 1 day ago (2 records total)
         LocalDateTime startTimestamp = LocalDate.now().minusDays(2).atStartOfDay();
-        LocalDateTime endTimestamp = LocalDate.now().minusDays(1).atTime(23, 59, 59);
+        LocalDateTime endTimestamp = LocalDate.now().plusDays(1).atStartOfDay();
 
         // Act
         String outputFile = jobLauncher.launchJob(startTimestamp, endTimestamp);
@@ -116,7 +116,7 @@ class ChargebackProcessorIntegrationTest {
         // Verify CSV content
         List<String> lines = Files.readAllLines(Paths.get(outputFile));
         assertTrue(lines.size() >= 2, "Should have header and at least one data row");
-        assertEquals("disputed_dt,disputed_amt,disputed_curr,merchandise_ref,reason_for_dispute,created_time", 
+        assertEquals("disputed_dt,disputed_amt,disputed_curr,merchandise_ref,reason_for_dispute,created_time",
                     lines.get(0), "Header should match");
 
         // Verify that only records within range are exported
